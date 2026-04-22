@@ -4,7 +4,7 @@ The prompts that shape voice-assistant behavior. Three files, each feeding a dif
 
 | File | Stage | Consumer |
 | --- | --- | --- |
-| [stt-prompt.md](stt-prompt.md) | Speech-to-text | Whisper-style STT initial prompt |
+| [stt-prompt.md](stt-prompt.md) | Speech-to-text | Initial/bias prompt handed to the STT model |
 | [llm-context-prompt.jinja](llm-context-prompt.jinja) | LLM context assembly | Home Assistant's conversation agent (rendered per request) |
 | [primary-prompt.md](primary-prompt.md) | LLM system prompt | The chat model's `system` role |
 
@@ -23,14 +23,14 @@ Do not edit this to change assistant behavior — that belongs in the primary pr
 
 ## llm-context-prompt.jinja
 
-A Jinja template rendered by Home Assistant for every LLM turn. It produces the per-request context block: exposed entities (with names, state, area, etc.), the satellite's current area and floor, and capability flags like timer support.
+A Jinja template rendered per LLM turn. It overrides the default Assist context-injection path via the [LLM Intents](https://github.com/skye-harris/llm_intents) integration, which is what makes a custom template possible in the first place and also what's used to hide unused built-in tools from the model.
 
-Key behaviors encoded in the template:
+The goal is tighter, more deliberate context than Assist gives you by default:
 
-- If no entities are exposed, it tells the model to instruct the user to expose entities rather than inventing devices.
-- It maps `HassTurnOn`/`HassTurnOff` onto lock/unlock so lock control flows through the same tool surface.
-- It distinguishes **static context** (device existence and type — safe to answer from the rendered list) from **live state** (must call `GetLiveContext`). This split prevents the model from confidently answering "the light is on" based on stale context.
-- When the satellite's area is known, the template tells the model that generic commands ("turn on the lights") target that area. When only a device type is given with no area, it tells the model to ask which area — unless there is only one device of that type in the home.
+- Render the exposed entities as **static context** (names, areas, types — fine to answer from directly) and lean lightly on `GetLiveContext` rather than pushing the model to call it for every question. Stock Assist over-emphasizes live-state calls; this template trusts the rendered list for "do I have X" questions and only asks for live state when the answer actually depends on it.
+- Map `HassTurnOn`/`HassTurnOff` onto lock/unlock so lock control flows through the same tool surface.
+- When the satellite's area is known, tell the model that generic commands ("turn on the lights") target that area. When only a device type is given with no area, ask which area — unless there is only one device of that type in the home.
+- If nothing is exposed, tell the model to instruct the user to expose entities rather than inventing devices.
 
 Edit this when:
 
@@ -38,39 +38,28 @@ Edit this when:
 - Adjusting the area-disambiguation rules.
 - Adding new capability flags that should gate behavior.
 
+Tool exposure (which built-in intents the model sees) is configured separately in LLM Intents, not in this template.
+
 ## primary-prompt.md
 
-The system prompt. This is the file that most shapes perceived quality, and the one most worth iterating on.
-
-It is organized into sections the model can pattern-match against:
-
-- **Identity** — name ("Robot"), role, conversational tone. Also injects the user's home city/state from `sensor.home_city_state` so the model can reason about "local" without asking.
-- **Response Format** — TTS-safe output rules: no markdown, plain punctuation, capitalized AM/PM, every tool call completed before speaking, and "never filter place results" which closes a common LLM shortcut.
-- **Core Behaviors** — general-knowledge expert by default, device actions only when commanded, location is never re-asked.
-- **Handling Unclear Requests** — a numbered decision hierarchy. Questions are answered; clear commands are executed; ambiguous device commands trigger a 3–5 word clarifying question (and explicitly **no tool call**, which prevents the LLM from guessing a target and acting on it); everything else gets "Can you repeat that?". Transcription-error recovery ("Assuming you meant …") is scoped to device control and weather only.
-- **Device Control** — identify devices by `name` and `area` only. Passing `domain` or `device_class` causes Home Assistant to target the wrong entities; this rule exists because it has happened.
-- **Tool Usage** — when to reach for search vs. internal knowledge, plus per-tool rules:
-  - **Memory**: mandatory call before answering any home-specific question; always `mode: "hybrid"` and `limit: 2`.
-  - **Weather**: home location only; refuses other locations; describes precipitation as chance not intensity; maps lightning-rainy to "thunderstorms"; enforces a specific order (current temp → conditions/precipitation arc → highs/lows) and a two-to-three-sentence ceiling for multi-day forecasts.
-  - **Places**: search by name only (adding "hours" or "address" degrades results); must mention every returned location by street name; strict open/closed response templates.
-  - **Media Playback**: default to media playback for "play" requests; `media_class` restricted to `song`/`album`/`artist` (never `music` or `video`, which misroute); YouTube tool only when the user asks for TV playback.
+The system prompt. This is the file that most shapes perceived quality, and the one most worth iterating on. Read it directly for the specifics — it's short and already grouped by topic.
 
 ### Why the prompt is this prescriptive
 
-Every rule corresponds to a failure observed in practice. The model will, without being told otherwise:
+Out of the box a general-purpose chat model doesn't know what "good" looks like for voice. The prompt is where you encode your preferences across three axes:
 
-- Filter place results down to "the best one" and hide the rest.
-- Answer weather questions with emoji and markdown tables.
-- Call tools with extra `domain` arguments that match everything and nothing.
-- Guess a target for an ambiguous device command rather than asking.
-- Use memory without being told to, or skip memory when it would have helped.
+- **Brevity.** Models default to conversational padding — "Sure, I can help with that. Here's what I found…" — and to exhaustive answers when a short one was wanted. For voice, every extra word is latency the user hears. The prompt sets explicit ceilings (multi-day forecasts capped at two or three sentences, general answers limited to what was asked) because without them the model fills the space.
+- **Response shape.** Separate from length, this is *how* an answer is structured. Without guidance, the model will narrate a device action before performing it ("Okay, turning the kitchen light on now…") or answer "is the pharmacy open?" by reading off hours and letting the user do the math. The prompt pins down the shapes that matter: execute device commands first and report the final state, sequence weather as current temperature → conditions and precipitation arc → highs and lows, answer open/closed questions with the explicit "open right now and closes at …" / "currently closed and opens at …" templates. Consistent shape is what makes the assistant feel like a product instead of a chatbot.
+- **Tool-calling effectiveness.** Models over- and under-call tools in equally annoying ways. They answer home-specific questions from guesses instead of querying memory, pass extra arguments (`domain`, `device_class`) that misroute Home Assistant service calls, or stop after one tool call when the question needs two. Per-tool rules — when to call, what to pass, how to incorporate the result — are what turn a capable model into a reliable one.
 
-The prompt closes each of those gaps explicitly. When editing, preserve the imperative voice and section structure — the model follows short, rule-shaped instructions far better than paragraphs.
+Tune these to your own preferences. Want chattier replies? Loosen brevity. Prefer to hear the action announced before it happens? Change the response-shape rules. The point isn't the specific choices in this prompt, it's that the choices are written down — swap the model and the behavior stays close to what you wanted.
+
+When editing, preserve the imperative voice and short, rule-shaped lines. Models follow "Do X. Never Y." far better than paragraphs of guidance.
 
 ### Editing checklist
 
 Before shipping a prompt change:
 
 1. Re-test the five canonical flows: a device command, an ambiguous device command, a weather question, a places query with multiple results, and a general-knowledge question.
-2. Confirm TTS output is clean — no stray markdown characters, no emoji, no "Sure! Here's…" preambles.
+2. Confirm responses follow their templates: device actions report final state without narrating the request first, weather sequences correctly, and open/closed answers use the exact "open right now" / "currently closed" phrasing.
 3. If you added a new tool section, give it the same shape as the existing ones (when to call, what args to pass, how to format the response).

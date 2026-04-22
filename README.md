@@ -55,10 +55,10 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 ### Home Assistant integrations
 
-- LLM Conversation (better base conversation)
-- [llm_intents](https://github.com/allenporter/home-assistant-llm-intents) (web search, places, weather forecast)
-- Music Assistant (satellites map to media players; `Play {music}` is handled by sentence triggers, not by the LLM)
-- Frigate (camera analysis handed to a vision-capable model for "who is at the door" queries)
+Several of these are third-party HACS integrations, not part of a stock Home Assistant install. `llm_intents` in particular is load-bearing: it's what lets the custom [prompts/llm-context-prompt.jinja](prompts/llm-context-prompt.jinja) override the default Assist context, and it's how unused built-in tools are hidden from the model.
+
+- [LLM Conversation](https://github.com/skye-harris/hass_local_openai_llm) for running OpenAI compatible LLM backends with optimizations for HomeAssistant
+- [llm_intents](https://github.com/skye-harris/llm_intents) — web search, places, weather forecast; also overrides the default Assist context template and controls which tools are exposed to the model
 
 ## Repo layout
 
