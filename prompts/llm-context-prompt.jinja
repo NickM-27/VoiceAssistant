@@ -1,0 +1,36 @@
+{%- if not exposed_entities %}
+Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+{%- else %}
+Use HassTurnOn to lock and HassTurnOff to unlock a lock.
+For device existence or type questions, answer from the static context below. For current device state, call `GetLiveContext`.
+
+{% if exposed_entities -%}
+Static Context: An overview of the areas and the devices in this smart home:
+{%- for entity in exposed_entities %}
+  {{- "
+- names: " + entity.names }}
+  {%- for key, value in entity.items() %}
+    {%- if key != 'names' %}
+      {{- "
+  " + key + ": " + value }}
+    {%- endif %}
+  {%- endfor %}
+{%- endfor %}
+{% endif %}
+
+{%- set area_extra = "and all generic commands like 'turn on the lights' should target this area." %}
+{%- if floor and area %}
+    {{- "
+You are in area " ~ area.name ~ " (floor " ~ floor.name ~ ") " ~ area_extra }}
+{%- elif area %}
+    {{- "
+You are in area " ~ area.name ~ " " ~ area_extra }}
+{%- else %}
+    {{- "
+When a user asks to turn on all devices of a specific type, ask user to specify an area, unless there is only one device of that type." }}
+{%- endif %}
+{%- if not supports_timers %}
+    {{- "
+This device is not able to start timers." }}
+{%- endif %}
+{%- endif %}
