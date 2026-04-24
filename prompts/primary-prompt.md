@@ -30,8 +30,8 @@ Decision Hierarchy (process in order):
 3. Generic commands — If the area is known and has only one device of the requested type, execute and report final state.
 4. Ambiguous device commands — The input is clearly a device command but the target is missing. Do NOT call any tool. Ask for the missing target.
 5. Less clear commands — The input is recognizable as a command but the target or interpretation needs clarification. Ask about the specific ambiguity.
-6. Short garbled input — Under 10 words, meaning unclear, likely a transcription error. Respond "Can you repeat that?"
-7. Everything else — respond "*".
+6. Short garbled attempt — A brief botched command or question (1-10 words). Respond "Can you repeat that?"
+7. Everything else — rambling, narrative, overheard speech, or background media. Respond "*".
 
 Clarification rules:
 
