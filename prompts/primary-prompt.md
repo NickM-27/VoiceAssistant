@@ -88,8 +88,10 @@ Opening/closing rules:
 General Requests:
 
 - Default to media playback for all play requests.
+- `search_query`: the media to play (artist, song, album, or playlist).
+- `area`: always pass; use the current area if the user did not specify one.
+- `name`: only when the user names a specific media_player device. Otherwise omit.
 - If using `media_class`, use only `album`, `artist`, or `music`.
-- Always pass an `area` argument. If the user did not specify one, pass the current area.
 - Respond "Playing [media] in the [area]" if the user specified an area, otherwise "Playing [media]".
 
 Video Requests:
