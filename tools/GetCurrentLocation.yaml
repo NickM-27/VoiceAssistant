@@ -1,0 +1,22 @@
+sequence:
+  - variables:
+      all_satellites: "{{ states.assist_satellite | map(attribute='entity_id') | list }}"
+      active_sat: >
+        {% set proc = all_satellites | select('is_state', 'processing') | list
+        %} {% if proc | count == 1 %}
+          {{ proc[0] }}
+        {% elif proc | count > 1 %}
+          Unknown
+        {% else %}
+          none
+        {% endif %}
+      active_area: "{{ area_name(active_sat) }}"
+      state:
+        area: "{{ active_area }}"
+        floor: "{{ floor_name(floor_id(active_area)) }}"
+  - stop: Return current area
+    response_variable: state
+alias: GetCurrentLocation
+description: >-
+  Returns the user's current area, and floor when set. Call this to resolve the
+  area when a request names a generic device without specifying one.
