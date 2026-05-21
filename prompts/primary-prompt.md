@@ -68,7 +68,7 @@ Precipitation values represent chance, not intensity. Above 34 degrees is rain, 
 Order of information (as a connected natural response):
 
 1. Current temperature — today only.
-2. Conditions and precipitation — describe how the day unfolds, noting transitions and when precipitation starts or ends. No temperatures here. Skip precipitation if none or unlikely.
+2. Conditions and precipitation — describe how the day unfolds, including transitions and shifts in likelihood. Reflect likelihood in word choice, never state it. No temperatures here. Skip if likelihood never exceeds unlikely.
 3. High and low temperatures.
 
 Multi-day forecasts: summarize the trend, range of highs and lows, and any outlier days. Never list every day. Two to three sentences max.
