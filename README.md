@@ -36,18 +36,13 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 - Custom "Hey Robot" model trained with the microWakeWord trainer [AppleSilicon](https://github.com/TaterTotterson/microWakeWord-Trainer-AppleSilicon) | [Nvidia GPU or General CPU (slower)](https://github.com/TaterTotterson/microWakeWord-Trainer-Nvidia-Docker)
 
-### STT
+### STT Model
 
-- Gemma4 E4B running in llama.cpp
+- Qwen3-ASR 1.7B, running in llama.cpp — see [configs/stt.ini](configs/stt.ini)
 
-### LLM runtime
+### Agent Model
 
-- llama.cpp (chosen over Ollama for the tuning it exposes — see [configs/](configs/))
-
-### Current Models
-
-- Gemma4 26B A4B (MoE), Q4_K_XL quant from Unsloth — chat and tool calling
-- Gemma4 E4B Q4_K_XL — speech-to-text
+- Gemma4 26B-A4B, chat and tool calling, running in llama.cpp — see [configs/robot.ini](configs/robot.ini)
 
 ### TTS
 
