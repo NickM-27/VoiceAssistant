@@ -62,6 +62,5 @@ Several of these are third-party HACS integrations, not part of a stock Home Ass
 
 ## Known issues worth knowing up front
 
-- Home Assistant's built-in `HassGetWeather` intent returns garbage when no weather entity is exposed. Override it with an automation that routes weather questions to the `llm_intents` weather tool.
 - Ollama's defaults make it easier to get started but in doing so make a lot of decisions that add latency and reduce efficiency. Prefer llama.cpp with an explicit, higher-quality quant.
 - Too many exposed entities will blow the context window and tank tool-calling accuracy. Group devices in Home Assistant and expose the groups. The reference setup exposes fewer entities.
