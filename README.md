@@ -38,11 +38,11 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 ### STT Model
 
-- Qwen3-ASR 1.7B, running in llama.cpp — see [configs/stt.ini](configs/stt.ini)
+- Qwen3-ASR 1.7B, running in llama.cpp — see [configs/stt.ini](configs/config.ini)
 
 ### Agent Model
 
-- Gemma4 26B-A4B, chat and tool calling, running in llama.cpp — see [configs/robot.ini](configs/robot.ini)
+- Gemma4 26B-A4B, chat and tool calling, running in llama.cpp — see [configs/robot.ini](configs/config.ini)
 
 ### TTS
 
