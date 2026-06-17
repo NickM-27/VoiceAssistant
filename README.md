@@ -59,6 +59,7 @@ Several of these are third-party HACS integrations, not part of a stock Home Ass
 
 - [configs/](configs/) — llama.cpp server config for the LLM and STT model. See [configs/README.md](configs/README.md).
 - [prompts/](prompts/) — the system prompts that shape behavior: identity and response rules, the Home Assistant context template, and the STT transcription prompt. See [prompts/README.md](prompts/README.md).
+- [tools/](tools/) — custom Home Assistant script tools exposed to the LLM, such as resolving the area the user is speaking from. See [tools/README.md](tools/README.md).
 
 ## Known issues worth knowing up front
 
