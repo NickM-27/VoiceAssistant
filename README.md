@@ -38,11 +38,11 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 ### STT Model
 
-- Qwen3-ASR 1.7B, running in llama.cpp — see [configs/stt.ini](configs/config.ini)
+- Qwen3-ASR 1.7B, running in llama.cpp — see [configs/config.ini](configs/config.ini)
 
 ### Agent Model
 
-- Gemma4 26B-A4B, chat and tool calling, running in llama.cpp — see [configs/robot.ini](configs/config.ini)
+- Gemma4 26B-A4B, chat and tool calling, running in llama.cpp — see [configs/config.ini](configs/config.ini)
 
 ### TTS
 
@@ -57,7 +57,7 @@ Several of these are third-party HACS integrations, not part of a stock Home Ass
 
 ## Repo layout
 
-- [configs/](configs/) — llama.cpp server config for the LLM and embedding model. See [configs/README.md](configs/README.md).
+- [configs/](configs/) — llama.cpp server config for the LLM and STT model. See [configs/README.md](configs/README.md).
 - [prompts/](prompts/) — the system prompts that shape behavior: identity and response rules, the Home Assistant context template, and the STT transcription prompt. See [prompts/README.md](prompts/README.md).
 
 ## Known issues worth knowing up front
