@@ -1,0 +1,18 @@
+services:
+  llama.cpp:
+    container_name: llama.cpp
+    image: ghcr.io/ggml-org/llama.cpp:server-vulkan
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ../../Documents/llama.cpp:/root/.cache/huggingface
+      - ./config:/config
+    ports:
+      - 8080:8080
+    restart: always
+    environment:
+      GGML_VK_ALLOW_GRAPHICS_QUEUE: 1
+      VK_DRIVER_FILES: /usr/share/vulkan/icd.d/radeon_icd.json
+    command:
+      - "--models-preset"
+      - "/config/config.ini"
