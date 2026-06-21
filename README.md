@@ -22,9 +22,9 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 ### Voice endpoints
 
-- Home Assistant Voice Preview Edition satellite
 - Two Satellite1 small squircle enclosures
-- Pixel 7a running View Assist as a hub-style satellite
+- Two Facebook Portals running View Assist as a hub-style satellite
+- Home Assistant Voice Preview Edition satellite
 
 ### Voice server
 
