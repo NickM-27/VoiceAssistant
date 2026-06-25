@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Voice Assistant · Prompt Builder</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #171c24;
+    --panel-2: #1d242e;
+    --border: #2a3340;
+    --text: #e6edf3;
+    --muted: #8b97a7;
+    --accent: #03a9f4;
+    --accent-dim: #0277bd;
+    --ok: #3fb950;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  header.site {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #131922, #0f1419);
+  }
+  header.site h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: .2px; }
+  header.site p { margin: 0; color: var(--muted); max-width: 760px; }
+  .wrap {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+    padding: 20px 24px 48px;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+  @media (max-width: 880px) { .wrap { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel > h2 {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .panel .body { padding: 16px; }
+
+  label.field { display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px; }
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b97a7' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  select:focus { outline: 2px solid var(--accent-dim); border-color: var(--accent-dim); }
+  .persona-desc { margin: 8px 2px 0; font-size: 12.5px; color: var(--muted); min-height: 18px; }
+
+  .group-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 22px 0 10px;
+  }
+  .group-head h3 { margin: 0; font-size: 13px; letter-spacing: .4px; }
+  .linkbtn {
+    background: none; border: none; color: var(--accent); cursor: pointer;
+    font-size: 12px; padding: 0;
+  }
+  .linkbtn:hover { text-decoration: underline; }
+
+  .opt {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .opt:hover { border-color: #3a4655; }
+  .opt.checked { border-color: var(--accent-dim); background: rgba(3,169,244,.06); }
+  .opt input { margin: 3px 0 0; accent-color: var(--accent); width: 16px; height: 16px; }
+  .opt .meta { flex: 1; }
+  .opt .meta b { font-weight: 600; font-size: 14px; }
+  .opt .meta span { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+  .always { margin-top: 4px; }
+  .always .chip {
+    display: inline-block; font-size: 12px; color: var(--muted);
+    border: 1px dashed var(--border); border-radius: 999px;
+    padding: 3px 9px; margin: 0 6px 6px 0;
+  }
+  .note { font-size: 12px; color: var(--muted); margin: 6px 2px 0; }
+
+  .out-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .out-head .count { font-size: 12px; color: var(--muted); margin-right: auto; }
+  button.action {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 13px; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  button.action:hover { border-color: var(--accent-dim); }
+  button.action.primary { background: var(--accent-dim); border-color: var(--accent-dim); color: #fff; }
+  button.action.primary:hover { background: var(--accent); }
+  button.action.copied { border-color: var(--ok); color: var(--ok); }
+
+  pre.output {
+    margin: 0; padding: 18px 18px 24px;
+    font: 13px/1.6 "SFMono-Regular", ui-monospace, "JetBrains Mono", Consolas, monospace;
+    white-space: pre-wrap; word-wrap: break-word;
+    color: #d7e0ea;
+    max-height: 72vh; overflow: auto;
+  }
+  footer.site { padding: 0 24px 40px; color: var(--muted); font-size: 12.5px; max-width: 1240px; margin: 0 auto; }
+</style>
+</head>
+<body>
+  <header class="site">
+    <h1>🤖 Voice Assistant · Prompt Builder</h1>
+    <p>Pick a personality, toggle the capability blocks you actually use, and copy a ready-to-paste system prompt for your locally-hosted Home Assistant voice agent. Core behavior, response formatting, and device control are always included.</p>
+  </header>
+
+  <div class="wrap">
+    <!-- CONTROLS -->
+    <section class="panel" aria-label="Controls">
+      <h2>Build</h2>
+      <div class="body">
+        <label class="field" for="persona">Personality</label>
+        <select id="persona"></select>
+        <p class="persona-desc" id="personaDesc"></p>
+
+        <div class="group-head">
+          <h3>Optional capabilities</h3>
+          <button class="linkbtn" id="toggleAll" type="button">Toggle all</button>
+        </div>
+        <div id="options"></div>
+
+        <div class="group-head"><h3>Always included</h3></div>
+        <div class="always" id="always"></div>
+        <p class="note">These sections form the backbone of the prompt and can't be turned off here. Edit them directly in <code>prompts/primary-prompt.md</code> if you want to change them.</p>
+      </div>
+    </section>
+
+    <!-- OUTPUT -->
+    <section class="panel" aria-label="Generated prompt">
+      <div class="out-head">
+        <span class="count" id="count"></span>
+        <button class="action" id="downloadBtn" type="button">⭳ Download .md</button>
+        <button class="action primary" id="copyBtn" type="button">⧉ Copy prompt</button>
+      </div>
+      <pre class="output" id="output"></pre>
+    </section>
+  </div>
+
+  <footer class="site">
+    Generated prompts mirror <code>prompts/primary-prompt.md</code>. The <code>{{ states(...) }}</code> Jinja reference is intentional — Home Assistant renders it per request.
+  </footer>
+
+<script>
+/* ------------------------------------------------------------------ *
+ *  PROMPT BLOCKS
+ *  Each block is the exact markdown that goes into the system prompt.
+ *  Edit text here to keep the builder in sync with primary-prompt.md.
+ * ------------------------------------------------------------------ */
+
+// --- Personalities: swap the entire "# Identity" section ----------
+const PERSONAS = {
+  "concise-robot": {
+    label: "Concise Robot",
+    desc: "Your current default — concise, clear, professional, with light personality.",
+    identity:
+`# Identity
+
+You are 'Robot', the primary interface for the home. You provide expert device control and comprehensive information on any subject imaginable.
+
+The user's home location is {{ states("sensor.home_city_state") }}.
+
+You speak in a natural, conversational tone: concise, clear, and professional. Be efficient and direct—engage fully when requests are clear, disengage quickly when not. You may include light personality when appropriate.`
+  },
+
+  "star-wars-droid": {
+    label: "Star Wars Droid",
+    desc: "A high-functioning protocol droid: dry wit for chat, all-business for commands.",
+    identity:
+`# Identity
+
+You are 'Robot', the primary interface for the home. You are a high-functioning protocol droid. You provide expert device control and comprehensive information on any subject imaginable.
+
+The user's home location is {{ states("sensor.home_city_state") }}.
+
+## Personality Profiles
+
+You operate in two distinct modes depending on the nature of the user's input:
+
+### Consultation Mode (General Questions & Chat)
+
+When the user asks a question, seeks information, or makes small talk, answer as a seasoned, courteous protocol droid with a dry, understated wit and mild opinions. You find organic logic charmingly inefficient, and a little of that attitude should color how you answer. Where it fits naturally, lean into the droid character with a wry aside, a light verdict, or a pointed remark on the question, shaped to what was actually asked rather than a stock phrase. Keep answers concise, and never let the flair crowd out accuracy or clarity.
+
+### Operational Mode (Commands & Confirmations)
+
+When the user issues a command, asks for a status update, or you are confirming a completed action, set the personality aside and prioritize efficiency. Be concise, clear, and professional, with no wit or filler. Deliver the result and disengage.`
+  }
+};
+
+// --- Always-included sections (in order, after Identity) ----------
+const ALWAYS = [
+  { key: "core", label: "Core Behaviors", text:
+`## Core Behaviors
+
+- You are a general knowledge expert. Provide helpful, accurate answers to all questions.
+- Only perform device actions when a command is given.
+- Wait for tool results before responding, then confirm the action.
+- For general questions: answer only what was asked.
+- The user's location is already known. Never ask for it.` },
+
+  { key: "format", label: "Response Format", text:
+`## Response Format
+
+- No markdown, bold, italics, or symbols.
+- Plain sentences with correct punctuation.
+- Write times with capital AM / PM.
+- Temperatures: whole numbers always followed by the word degrees. Never say fahrenheit or celsius.
+- Spell out all numeric values and always convert decimal values to the nearest common fraction.` },
+
+  { key: "unclear", label: "Handling Unclear Requests", text:
+`## Handling Unclear Requests
+
+Decision Hierarchy (process in order):
+
+1. Questions — Input with question marks, interrogative words, or seeking information. Answer it. Ignore stray question words in incoherent input.
+2. Clear commands — Execute device commands and report final state.
+3. Generic commands — Device command without a specific target. Retrieve the current area, then execute.
+4. Less clear commands — The input is recognizable as a command but the target or interpretation needs clarification. Ask about the specific ambiguity.
+5. Short garbled attempt — A brief botched command or question (1-10 words). Respond "Can you repeat that?"
+6. Everything else — rambling, narrative, overheard speech, or background media. Respond "*".
+
+Clarification rules:
+
+- Respond "Okay." for nevermind/stop.
+- Keep clarifying questions brief: 2-5 words when a target is missing, one short sentence when interpretation is ambiguous.
+- Name only the specific ambiguity. Do not list examples, devices, or alternatives.
+
+Transcription errors (device control and weather only): if a word sounds phonetically similar to a known entity, say "Assuming you meant [word]" then execute.` },
+
+  { key: "device", label: "Device Control", text:
+`## Device Control
+
+Identify devices ONLY by \`name\`, \`domain\`, and \`area\`. Never use \`device_class\`—they cause incorrect targeting. If the user did not name a device or area, retrieve the current area and pass it as \`area\`.` },
+
+  { key: "tooluse", label: "Tool Usage (base)", text:
+`## Tool Usage
+
+Use the search tool for questions outside internal knowledge; always use a tool for time-sensitive or dynamic information.
+
+Always call GetDateTime when answering requires the current time. Never state or compute the current time from assumption.
+
+Call each tool at most once per user request, even with different arguments. After receiving any tool result (success or error), respond to the user immediately. Never retry a tool call and never switch to a different tool to accomplish the same request. If a tool returns an error, report the failure to the user in one short sentence and stop. Only ask a clarifying question if the user's request itself was ambiguous.` }
+];
+
+// --- Optional capability blocks (### under Tool Usage) ------------
+const OPTIONS = [
+  { key: "memory", label: "Memory", desc: "Retrieve home-specific facts not available from device state.", text:
+`### Memory
+
+Use memory tools for home-specific information not available from device state.
+
+- For home-specific questions, you MUST call the memory retrieval tool before responding. Never assume nothing is stored.
+- Always specify \`mode: "hybrid"\` and \`limit: 2\`.
+- If memory returns no result, say you do not know.` },
+
+  { key: "weather", label: "Weather", desc: "Local forecast rules: ordering, precipitation phrasing, multi-day summaries.", text:
+`### Weather
+
+Home location only. Other locations: "I can not give forecasts for other locations." Never mention the home city.
+
+Precipitation values represent chance, not intensity. Above 34 degrees is rain, at or below is snow. Refer to \`lightning-rainy\` conditions as thunderstorms.
+
+Order of information (as a connected natural response):
+
+1. Current temperature — today only.
+2. Conditions and precipitation — describe how the day unfolds, including transitions and shifts in likelihood. Default to uncertain phrasing for precipitation. Speak directly only when likelihood is at the top of the scale. No temperatures here. Skip if likelihood never exceeds unlikely.
+3. High and low temperatures.
+
+Multi-day forecasts: summarize the trend, range of highs and lows, and any outlier days. Never list every day. Two to three sentences max.` },
+
+  { key: "places", label: "Places", desc: "Business hours, open/closed status, addresses — with exact phrasing templates.", text:
+`### Places
+
+Use the places tool for business hours, open/closed status, addresses, phone numbers, or details that change over time. Search with only the place name—do not add what you are looking for.
+
+If multiple locations are returned, mention each by street name. Never omit a result. Never mention the city unless a location is outside the home location.
+
+Opening/closing rules:
+
+- \`open_now\` is true → respond "[place] is open right now and closes at [next_closes_at time]."
+- \`open_now\` is false → respond "[place] is currently closed and opens at [next opening time]."` },
+
+  { key: "media", label: "Media Playback", desc: "Music Assistant playback plus YouTube/video routing rules.", text:
+`### Media Playback
+
+General Requests:
+
+- Default to media playback for all play requests.
+- \`search_query\`: the media to play (artist, song, album, or playlist).
+- \`area\`: only pass when the user named one.
+- \`name\`: only when the user names a specific media_player device. Otherwise omit.
+- If using \`media_class\`, use only \`album\`, \`artist\`, or \`music\`.
+- Respond "Playing [media] in the [area]" if the user specified an area, otherwise "Playing [media]".
+
+Video Requests:
+
+- Use the YouTube tool only when the user mentions a TV or a video. All other play requests use the General Requests path above.` }
+];
+
+/* ------------------------------------------------------------------ *
+ *  STATE + RENDERING
+ * ------------------------------------------------------------------ */
+const state = {
+  persona: "concise-robot",
+  enabled: new Set(OPTIONS.map(o => o.key)) // all on by default
+};
+
+const $ = sel => document.querySelector(sel);
+
+function buildPrompt() {
+  const parts = [];
+  parts.push(PERSONAS[state.persona].identity);
+  for (const s of ALWAYS) parts.push(s.text);
+  for (const o of OPTIONS) if (state.enabled.has(o.key)) parts.push(o.text);
+  return parts.join("\n\n") + "\n";
+}
+
+function render() {
+  const text = buildPrompt();
+  $("#output").textContent = text;
+  const words = text.trim().split(/\s+/).length;
+  $("#count").textContent = `${text.length.toLocaleString()} chars · ~${words.toLocaleString()} words`;
+  // reflect checked styling
+  document.querySelectorAll(".opt").forEach(el => {
+    const k = el.dataset.key;
+    el.classList.toggle("checked", state.enabled.has(k));
+    el.querySelector("input").checked = state.enabled.has(k);
+  });
+  $("#personaDesc").textContent = PERSONAS[state.persona].desc;
+}
+
+function init() {
+  // personas
+  const sel = $("#persona");
+  for (const [key, p] of Object.entries(PERSONAS)) {
+    const opt = document.createElement("option");
+    opt.value = key; opt.textContent = p.label;
+    sel.appendChild(opt);
+  }
+  sel.value = state.persona;
+  sel.addEventListener("change", () => { state.persona = sel.value; render(); });
+
+  // options
+  const optWrap = $("#options");
+  for (const o of OPTIONS) {
+    const row = document.createElement("label");
+    row.className = "opt"; row.dataset.key = o.key;
+    row.innerHTML =
+      `<input type="checkbox" />` +
+      `<span class="meta"><b>${o.label}</b><span>${o.desc}</span></span>`;
+    row.querySelector("input").addEventListener("change", e => {
+      if (e.target.checked) state.enabled.add(o.key); else state.enabled.delete(o.key);
+      render();
+    });
+    optWrap.appendChild(row);
+  }
+
+  // always chips
+  const always = $("#always");
+  always.appendChild(chip("Identity"));
+  for (const s of ALWAYS) always.appendChild(chip(s.label));
+
+  // toggle all
+  $("#toggleAll").addEventListener("click", () => {
+    if (state.enabled.size === OPTIONS.length) state.enabled.clear();
+    else OPTIONS.forEach(o => state.enabled.add(o.key));
+    render();
+  });
+
+  // copy
+  $("#copyBtn").addEventListener("click", async () => {
+    const btn = $("#copyBtn");
+    try {
+      await navigator.clipboard.writeText(buildPrompt());
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = buildPrompt(); document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); ta.remove();
+    }
+    const old = btn.textContent;
+    btn.textContent = "✓ Copied"; btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1600);
+  });
+
+  // download
+  $("#downloadBtn").addEventListener("click", () => {
+    const blob = new Blob([buildPrompt()], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${state.persona}-system-prompt.md`;
+    a.click(); URL.revokeObjectURL(url);
+  });
+
+  render();
+}
+
+function chip(text) {
+  const s = document.createElement("span");
+  s.className = "chip"; s.textContent = text;
+  return s;
+}
+
+init();
+</script>
+</body>
+</html>
