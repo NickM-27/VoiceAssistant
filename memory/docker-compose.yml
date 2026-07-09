@@ -1,0 +1,28 @@
+services:
+  mcp-proxy:
+    container_name: mcp-proxy
+    image: ghcr.io/tbxark/mcp-proxy:latest
+    restart: always
+    volumes:
+      - ./proxy.json:/config/config.json
+    ports:
+      - 14000:9090
+    depends_on:
+      memory-mcp:
+        condition: service_started
+  memory-mcp:
+    container_name: memory-mcp
+    image: ghcr.io/doobidoo/mcp-memory-service:latest
+    restart: always
+    ports:
+      - 14002:8000
+    volumes:
+      - ./memory:/data
+    environment:
+      - MCP_STREAMABLE_HTTP_MODE=1
+      - MCP_SSE_HOST=0.0.0.0
+      - MCP_SSE_PORT=8000
+      - MCP_OAUTH_ENABLED=false
+      - MCP_MEMORY_STORAGE_BACKEND=sqlite_vec
+      - MCP_MEMORY_SQLITE_PRAGMAS=journal_mode=WAL,busy_timeout=15000
+      - MCP_MEMORY_SQLITE_PATH=/data/memory.db

@@ -54,12 +54,14 @@ Several of these are third-party HACS integrations, not part of a stock Home Ass
 
 - [LLM Conversation](https://github.com/skye-harris/hass_local_openai_llm) for running OpenAI compatible LLM backends with optimizations for HomeAssistant
 - [llm_intents](https://github.com/skye-harris/llm_intents) — web search, places, weather forecast; also overrides the default Assist context template and controls which tools are exposed to the model
+- [Model Context Protocol](https://www.home-assistant.io/integrations/mcp/) — connects the assistant to the long-term memory service so it can recall home-specific facts. See [memory/README.md](memory/README.md).
 
 ## Repo layout
 
 - [configs/](configs/) — llama.cpp server config for the LLM and STT model. See [configs/README.md](configs/README.md).
 - [prompts/](prompts/) — the system prompts that shape behavior: identity and response rules, the Home Assistant context template, and the STT transcription prompt. See [prompts/README.md](prompts/README.md). Build one interactively with the [Prompt Builder](https://nickm-27.github.io/VoiceAssistant/) ([docs/index.html](docs/index.html)).
 - [tools/](tools/) — custom Home Assistant script tools exposed to the LLM, such as resolving the area the user is speaking from. See [tools/README.md](tools/README.md).
+- [memory/](memory/) — the Docker setup for the long-term memory service (MCP memory server + filtering proxy) the assistant searches for home-specific facts. See [memory/README.md](memory/README.md).
 
 ## Known issues worth knowing up front
 

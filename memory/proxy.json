@@ -1,0 +1,20 @@
+{
+  "mcpProxy": {
+    "name": "MCP Proxy",
+    "baseURL": "https://mcp.example.com",
+    "addr": ":9090",
+    "type": "streamable-http"
+  },
+  "mcpServers": {
+    "memory": {
+      "url": "http://memory-mcp:8000/mcp",
+      "transportType": "streamable-http",
+      "options": {
+        "toolFilter": {
+          "mode": "allow",
+          "list": ["memory_search"]
+        }
+      }
+    }
+  }
+}
