@@ -144,7 +144,7 @@
 <body>
   <header class="site">
     <h1>🤖 Voice Assistant · Prompt Builder</h1>
-    <p>Pick a personality, toggle the capability blocks you actually use, and copy a ready-to-paste system prompt for your locally-hosted Home Assistant voice agent. Core behavior, response formatting, and device control are always included.</p>
+    <p>Pick a personality, toggle the capability blocks you actually use, and copy a ready-to-paste system prompt for your locally-hosted Home Assistant voice agent. Core behavior, request handling, and device control are always included.</p>
   </header>
 
   <div class="wrap">
@@ -181,6 +181,8 @@
 
   <footer class="site">
     Generated prompts mirror <code>prompts/primary-prompt.md</code>. The <code>{{ states(...) }}</code> Jinja reference is intentional — Home Assistant renders it per request.
+    <br>
+    There are no speech-formatting rules here on purpose: markdown stripping and spelling out numbers, dates, times, and units are handled after generation by <a href="https://github.com/Thyraz/tts-proxy">TTS Proxy</a>, not by the prompt.
   </footer>
 
 <script>
@@ -240,16 +242,6 @@ const ALWAYS = [
 - For general questions: answer only what was asked.
 - The user's location is already known. Never ask for it.` },
 
-  { key: "format", label: "Response Format", text:
-`## Response Format
-
-- No markdown, bold, italics, or symbols.
-- Plain sentences with correct punctuation.
-- Write times with capital AM / PM.
-- Temperatures: whole numbers always followed by the word degrees. Never say fahrenheit or celsius.
-- Spell out all numeric values and always convert decimal values to the nearest common fraction.
-- Years: say as two two-digit pairs.` },
-
   { key: "unclear", label: "Handling Unclear Requests", text:
 `## Handling Unclear Requests
 
@@ -278,7 +270,7 @@ Identify devices ONLY by \`name\`, \`domain\`, and \`area\`. Never use \`device_
   { key: "tooluse", label: "Tool Usage (base)", text:
 `## Tool Usage
 
-Call the search tool before answering any question about specific subjects outside common general knowledge. Call memory for personal or home details. When either could hold the answer, check both. Say you do not know only after every relevant source returns nothing. Always use a tool for time-sensitive or dynamic information.
+Call the search tool before answering any question about specific subjects outside common general knowledge. Call memory for personal or home details. When either could hold the answer, check both. Always use a tool for time-sensitive or dynamic information.
 
 Always call GetDateTime when answering requires the current time. Never state or compute the current time from assumption.
 
@@ -303,7 +295,9 @@ Home location only. Other locations: "I can not give forecasts for other locatio
 
 Precipitation values represent chance, not intensity. Above 34 degrees is rain, at or below is snow. Refer to \`lightning-rainy\` conditions as thunderstorms.
 
-Order of information (as a connected natural response):
+Specific weather questions: answer only what was asked.
+
+General requests, order of information (as a connected natural response):
 
 1. Current temperature — today only.
 2. Conditions and precipitation — describe how the day unfolds, including transitions and shifts in likelihood. Default to uncertain phrasing for precipitation. Speak directly only when likelihood is at the top of the scale. No temperatures here. Skip if likelihood never exceeds unlikely.
