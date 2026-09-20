@@ -47,8 +47,8 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 ### TTS
 
-- Kokoro TTS — handles currency, phone numbers, and addresses well, and supports voice mixing
-- [TTS Proxy](https://github.com/Thyraz/tts-proxy) — a HACS integration that wraps the real TTS entity and rewrites the model's text before it is spoken: strips markdown and emoji, and spells out numbers, dates, times, and units. Home Assistant points at the proxy entity, and the proxy forwards to Kokoro.
+- [OmniVoice](https://github.com/k2-fsa/OmniVoice) running through [audio.cpp](https://github.com/0xShug0/audio.cpp) — audio.cpp gives me an easy OpenAI-compatible API for TTS, and OmniVoice makes voice cloning efficient, so the assistant speaks in a custom voice.
+- [TTS Proxy](https://github.com/Thyraz/tts-proxy) — a HACS integration that wraps the real TTS entity and rewrites the model's text before it is spoken: strips markdown and emoji, and spells out numbers, dates, times, and units. Home Assistant points at the proxy entity, and the proxy forwards to the OmniVoice TTS server.
 
 Speech formatting belongs here rather than in the system prompt. The model keeps writing normally — digits, dates, units — so responses stay readable in the text chat view, and the speech-only cleanup happens at the layer that actually feeds the speech.
 
