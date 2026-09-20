@@ -14,6 +14,7 @@ Wake word  ->  STT  ->  LLM (tool calls)  ->  TTS proxy  ->  TTS
                           +-- Music Assistant
                           +-- Frigate (camera vision)
                           +-- Memory tool
+                          +-- Barkeeper (home bar inventory + cocktail recipes)
 ```
 
 Each stage is swappable. The LLM is the only piece that is meaningfully sensitive to hardware.
@@ -58,6 +59,7 @@ Several of these are third-party HACS integrations, not part of a stock Home Ass
 - [LLM Conversation](https://github.com/skye-harris/hass_local_openai_llm) for running OpenAI compatible LLM backends with optimizations for HomeAssistant
 - [llm_intents](https://github.com/skye-harris/llm_intents) — web search, places, weather forecast; also overrides the default Assist context template and controls which tools are exposed to the model
 - [Model Context Protocol](https://www.home-assistant.io/integrations/mcp/) — connects the assistant to the long-term memory service so it can recall home-specific facts. See [memory/README.md](memory/README.md).
+- [mcp-barkeeper](https://github.com/NickM-27/mcp-barkeeper) — a small MCP server that tracks what's on the home bar and saves favorite cocktail recipes, so the assistant can answer "what can I make?" against the real shelf. Connected through the same Model Context Protocol integration as the memory service.
 - [TTS Proxy](https://github.com/Thyraz/tts-proxy) — post-processes responses for speech; see [TTS](#tts) above
 
 ## Repo layout

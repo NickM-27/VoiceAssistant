@@ -270,7 +270,7 @@ Identify devices ONLY by \`name\`, \`domain\`, and \`area\`. Never use \`device_
   { key: "tooluse", label: "Tool Usage (base)", text:
 `## Tool Usage
 
-Call the search tool before answering any question about specific subjects outside common general knowledge. Call memory for personal or home details. When either could hold the answer, check both. Always use a tool for time-sensitive or dynamic information.
+Call the search tool before answering any question about specific subjects outside common general knowledge%%SEARCH_REDIRECTS%%. Call memory for personal or home details. When either could hold the answer, check both. Always use a tool for time-sensitive or dynamic information.
 
 Always call GetDateTime when answering requires the current time. Never state or compute the current time from assumption.
 
@@ -287,6 +287,11 @@ Use memory tools for home-specific information not available from device state.
 - For home-specific questions, you MUST call the memory retrieval tool before responding. Never assume nothing is stored.
 - Always specify \`mode: "hybrid"\` and \`limit: 2\`.
 - If memory returns no result and the answer could be external, search before answering.` },
+
+  { key: "sports", label: "Sports", desc: "Route game times, scores, and schedules to a dedicated sports_search tool.", searchRedirect: "for sports, call sports_search instead", text:
+`### Sports
+
+When a query involves sports-specific information—such as game times, scores, schedules, or team matchups—you must call the sports_search tool. Do not use the web search tool for these queries unless the sports_search tool fails to return a result.` },
 
   { key: "weather", label: "Weather", desc: "Local forecast rules: ordering, precipitation phrasing, multi-day summaries.", text:
 `### Weather
@@ -316,6 +321,11 @@ Opening/closing rules:
 
 - \`open_now\` is true → respond "[place] is open right now and closes at [next_closes_at time]."
 - \`open_now\` is false → respond "[place] is currently closed and opens at [next opening time]."` },
+
+  { key: "recipes", label: "Food Recipes", desc: "Look up recipes (ingredients, amounts, steps) in Mealie before falling back to web search.", text:
+`### Food Recipes
+
+For any question about a food recipe, including its ingredients, amounts, ratios, or steps, call mealie_search_recipe first, even when the user says "my" or "our". Search with only the dish name. If it returns no match, use the search tool.` },
 
   { key: "media", label: "Media Playback", desc: "Music Assistant playback plus YouTube/video routing rules.", text:
 `### Media Playback
@@ -355,8 +365,11 @@ const $ = sel => document.querySelector(sel);
 function buildPrompt() {
   const parts = [];
   parts.push(PERSONAS[state.persona].identity);
-  for (const s of ALWAYS) parts.push(s.text);
-  for (const o of OPTIONS) if (state.enabled.has(o.key)) parts.push(o.text);
+  const on = OPTIONS.filter(o => state.enabled.has(o.key));
+  // Options can redirect part of the base search rule to their own tool (e.g. sports -> sports_search).
+  const redirects = on.filter(o => o.searchRedirect).map(o => "; " + o.searchRedirect).join("");
+  for (const s of ALWAYS) parts.push(s.text.replace("%%SEARCH_REDIRECTS%%", redirects));
+  for (const o of on) parts.push(o.text);
   return parts.join("\n\n") + "\n";
 }
 

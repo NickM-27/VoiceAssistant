@@ -1,7 +1,7 @@
 # prompts
 
 > **🤖 [Open the interactive Prompt Builder →](https://nickm-27.github.io/VoiceAssistant/)**
-> Pick a personality (Concise Robot, Star Wars Droid) and toggle the capability blocks you use (Memory, Weather, Places, Media Playback) to generate a ready-to-paste system prompt. Source: [docs/index.html](../docs/index.html).
+> Pick a personality (Concise Robot, Star Wars Droid) and toggle the capability blocks you use (Memory, Sports, Weather, Places, Food Recipes, Media Playback) to generate a ready-to-paste system prompt. Source: [docs/index.html](../docs/index.html).
 
 The prompts that shape voice-assistant behavior. Three files, each feeding a different stage of the pipeline.
 
