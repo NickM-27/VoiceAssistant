@@ -1,6 +1,6 @@
 # memory
 
-The long-term memory the assistant queries for home-specific facts that aren't in device state — who owns which car, where the spare key lives, trash day. The [primary prompt](../prompts/primary-prompt.md) requires the model to call the memory retrieval tool before answering any home-specific question, so this service is what backs that rule.
+The long-term memory the assistant queries for home-specific facts that aren't in device state — who owns which car, where the spare key lives, trash day. The [primary prompt](../prompts/primary-prompt/) requires the model to call the memory retrieval tool before answering any home-specific question, so this service is what backs that rule.
 
 Two containers, wired together by [docker-compose.yml](docker-compose.yml):
 
@@ -46,4 +46,4 @@ Both containers restart automatically. The memory DB lives in `./memory/memory.d
 2. Give it the proxy's endpoint — the `baseURL` from [proxy.json](proxy.json) (or `http://<host>:14000`).
 3. After the integration is set up, **enable it for your conversation agent**: open the LLM/conversation integration's options and add the memory server to its list of exposed tools/services. Until you do this the model can't see `memory_search`, even though the integration is connected.
 
-Once exposed, the `memory_search` tool shows up to the model and the primary prompt's memory rules (`mode: "hybrid"`, `limit: 2`) take effect.
+Once exposed, the `memory_search` tool shows up to the model and the primary prompt's memory rules take effect.

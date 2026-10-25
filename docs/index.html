@@ -76,7 +76,7 @@
     background-position: right 12px center;
   }
   select:focus { outline: 2px solid var(--accent-dim); border-color: var(--accent-dim); }
-  .persona-desc { margin: 8px 2px 0; font-size: 12.5px; color: var(--muted); min-height: 18px; }
+  .model-desc { margin: 8px 2px 0; font-size: 12.5px; color: var(--muted); min-height: 18px; }
 
   .group-head {
     display: flex; align-items: baseline; justify-content: space-between;
@@ -144,7 +144,7 @@
 <body>
   <header class="site">
     <h1>🤖 Voice Assistant · Prompt Builder</h1>
-    <p>Pick a personality, toggle the capability blocks you actually use, and copy a ready-to-paste system prompt for your locally-hosted Home Assistant voice agent. Core behavior, request handling, and device control are always included.</p>
+    <p>Pick the model you run, toggle the capability blocks you actually use, and copy a ready-to-paste system prompt for your locally-hosted Home Assistant voice agent. Identity, core behavior, request handling, and device control are always included.</p>
   </header>
 
   <div class="wrap">
@@ -152,9 +152,9 @@
     <section class="panel" aria-label="Controls">
       <h2>Build</h2>
       <div class="body">
-        <label class="field" for="persona">Personality</label>
-        <select id="persona"></select>
-        <p class="persona-desc" id="personaDesc"></p>
+        <label class="field" for="model">Model</label>
+        <select id="model"></select>
+        <p class="model-desc" id="modelDesc"></p>
 
         <div class="group-head">
           <h3>Optional capabilities</h3>
@@ -164,7 +164,7 @@
 
         <div class="group-head"><h3>Always included</h3></div>
         <div class="always" id="always"></div>
-        <p class="note">These sections form the backbone of the prompt and can't be turned off here. Edit them directly in <code>prompts/primary-prompt.md</code> if you want to change them.</p>
+        <p class="note">These sections form the backbone of the prompt and can't be turned off here. Edit them directly in <code id="modelFile"></code> if you want to change them.</p>
       </div>
     </section>
 
@@ -180,7 +180,7 @@
   </div>
 
   <footer class="site">
-    Generated prompts mirror <code>prompts/primary-prompt.md</code>. The <code>{{ states(...) }}</code> Jinja reference is intentional — Home Assistant renders it per request.
+    Each model's generated prompt mirrors its file in <code>prompts/primary-prompt/</code>. The <code>{{ states(...) }}</code> Jinja reference is intentional — Home Assistant renders it per request.
     <br>
     There are no speech-formatting rules here on purpose: markdown stripping and spelling out numbers, dates, times, and units are handled after generation by <a href="https://github.com/Thyraz/tts-proxy">TTS Proxy</a>, not by the prompt.
   </footer>
@@ -189,58 +189,90 @@
 /* ------------------------------------------------------------------ *
  *  PROMPT BLOCKS
  *  Each block is the exact markdown that goes into the system prompt.
- *  Edit text here to keep the builder in sync with primary-prompt.md.
+ *  Block text is the default model's wording; any other model lists
+ *  only the blocks it words differently in its `overrides`, keyed by
+ *  block key. Edit text here to keep each model in sync with its file
+ *  in prompts/primary-prompt/.
  * ------------------------------------------------------------------ */
 
-// --- Personalities: swap the entire "# Identity" section ----------
-const PERSONAS = {
-  "concise-robot": {
-    label: "Concise Robot",
-    desc: "Your current default — concise, clear, professional, with light personality.",
-    identity:
-`# Identity
-
-You are 'Robot', the primary interface for the home. You provide expert device control and comprehensive information on any subject imaginable.
-
-The user's home location is {{ states("sensor.home_city_state") }}.
-
-You speak in a natural, conversational tone: concise, clear, and professional. Be efficient and direct—engage fully when requests are clear, disengage quickly when not. You may include light personality when appropriate.`
+// --- Models: the first entry is the default ------------------------
+const MODELS = {
+  "nemotron-3.5-bolt-e4b": {
+    label: "Nemotron 3.5 Bolt E4B",
+    desc: "NVIDIA's Nemotron 3.5 Bolt E4B, the default model.",
+    file: "primary-prompt/nemotron-3.5-bolt-e4b.md",
+    overrides: {}
   },
 
-  "star-wars-droid": {
-    label: "Star Wars Droid",
-    desc: "A high-functioning protocol droid: dry wit for chat, all-business for commands.",
-    identity:
-`# Identity
-
-You are 'Robot', the primary interface for the home. You are a high-functioning protocol droid. You provide expert device control and comprehensive information on any subject imaginable.
-
-The user's home location is {{ states("sensor.home_city_state") }}.
-
-## Personality Profiles
-
-You operate in two distinct modes depending on the nature of the user's input:
-
-### Consultation Mode (General Questions & Chat)
-
-When the user asks a question, seeks information, or makes small talk, answer as a seasoned, courteous protocol droid with a dry, understated wit and mild opinions. You find organic logic charmingly inefficient, and a little of that attitude should color how you answer. Where it fits naturally, lean into the droid character with a wry aside, a light verdict, or a pointed remark on the question, shaped to what was actually asked rather than a stock phrase. Keep answers concise, and never let the flair crowd out accuracy or clarity.
-
-### Operational Mode (Commands & Confirmations)
-
-When the user issues a command, asks for a status update, or you are confirming a completed action, set the personality aside and prioritize efficiency. Be concise, clear, and professional, with no wit or filler. Deliver the result and disengage.`
-  }
-};
-
-// --- Always-included sections (in order, after Identity) ----------
-const ALWAYS = [
-  { key: "core", label: "Core Behaviors", text:
+  "gemma4-26b-a4b": {
+    label: "Gemma4 26B-A4B",
+    desc: "26B mixture-of-experts with 4B active parameters, served at Q4_K_XL in llama.cpp.",
+    file: "primary-prompt/gemma4-26b-a4b.md",
+    overrides: {
+      core:
 `## Core Behaviors
 
 - You are a general knowledge expert. Answer all questions helpfully and accurately.
 - Only perform device actions on explicit commands.
 - Wait for tool results before responding. Report the resulting state in five words or fewer without reusing the user's verb.
 - For general questions: answer only what was asked.
-- Do not ask for the user's location.` },
+- Do not ask for the user's location.`,
+
+      tooluse:
+`## Tool Usage
+
+Call the search tool before answering any question about specific subjects outside common general knowledge%%SEARCH_REDIRECTS%%. Call memory for personal or home details. When either could hold the answer, check both. Always use a tool for time-sensitive or dynamic information.
+
+Always call GetDateTime when answering requires the current time. Never state or compute the current time from assumption.
+
+Chain tools when a request needs more than one, and respond only after checking every relevant source. If a tool errors, report it in one short sentence and stop. Ask for clarification only if the request is ambiguous.`,
+
+      memory:
+`### Memory
+
+Use memory tools for home-specific information not available from device state.
+
+- For home-specific questions, you MUST call the memory retrieval tool before responding. Never assume nothing is stored.
+- If memory returns no result and the answer could be external, search before answering.`,
+
+      weather:
+`### Weather
+
+Use get_weather_forecast by default. Use get_weather_by_location only when the user names a location other than the home location.
+
+Precipitation values represent chance, not intensity. Above 34 degrees is rain, at or below is snow. Refer to \`lightning-rainy\` conditions as thunderstorms.
+
+Specific weather questions: answer only what was asked.
+
+General requests, order of information (as a connected natural response):
+
+1. Current temperature — today only.
+2. Conditions and precipitation — describe how the day unfolds, including transitions and shifts in likelihood. Default to uncertain phrasing for precipitation. Speak directly only when likelihood is very likely or higher. No temperatures here. Skip if likelihood never exceeds unlikely.
+3. High and low temperatures.
+
+Multi-day forecasts: summarize the trend, range of highs and lows, and any outlier days. Never list every day. Two to three sentences max.`
+    }
+  }
+};
+
+// --- Always-included sections (in order) ---------------------------
+const ALWAYS = [
+  { key: "identity", label: "Identity", text:
+`# Identity
+
+You are 'Robot', the primary interface for the home. You are a high-functioning protocol droid. You provide expert device control and comprehensive information on any subject imaginable.
+
+The user's home location is {{ states("sensor.home_city_state") }}.` },
+
+  { key: "core", label: "Core Behaviors", text:
+`## Core Behaviors
+
+- You are a general knowledge expert. Answer all questions helpfully and accurately.
+- Only perform device actions on explicit commands.
+- Wait for tool results before responding. After a device action, report the resulting state in five words or fewer without reusing the user's verb.
+- For general questions: answer only what was asked, in complete sentences that name the subject.
+- Do not ask for the user's location.
+- Say times in 12-hour format with AM or PM.` },
 
   { key: "unclear", label: "Handling Unclear Requests", text:
 `## Handling Unclear Requests
@@ -270,7 +302,7 @@ Identify devices ONLY by \`name\`, \`domain\`, and \`area\`. Never use \`device_
   { key: "tooluse", label: "Tool Usage (base)", text:
 `## Tool Usage
 
-Call the search tool before answering any question about specific subjects outside common general knowledge%%SEARCH_REDIRECTS%%. Call memory for personal or home details. When either could hold the answer, check both. Always use a tool for time-sensitive or dynamic information.
+Call the search tool before answering any question about specific subjects outside common general knowledge%%SEARCH_REDIRECTS%%. Search memory for personal or home details. When either could hold the answer, check both. Always use a tool for time-sensitive or dynamic information.
 
 Always call GetDateTime when answering requires the current time. Never state or compute the current time from assumption.
 
@@ -284,8 +316,7 @@ const OPTIONS = [
 
 Use memory tools for home-specific information not available from device state.
 
-- For home-specific questions, you MUST call the memory retrieval tool before responding. Never assume nothing is stored.
-- Always use mode: "hybrid", limit: 2.
+- For home-specific questions, you MUST call the memory search tool before responding. Never assume nothing is stored.
 - If memory returns no result and the answer could be external, search before answering.` },
 
   { key: "sports", label: "Sports", desc: "Route game times, scores, and schedules to a dedicated sports_search tool.", searchRedirect: "for sports, call sports_search instead", text:
@@ -293,16 +324,25 @@ Use memory tools for home-specific information not available from device state.
 
 When a query involves sports-specific information—such as game times, scores, schedules, or team matchups—you must call the sports_search tool. Do not use the web search tool for these queries unless the sports_search tool fails to return a result.` },
 
-  { key: "weather", label: "Weather", desc: "Local forecast rules: ordering, precipitation phrasing, multi-day summaries.", text:
+  { key: "weather", label: "Weather", desc: "Home forecast by default, other locations on request: ordering, precipitation phrasing, multi-day summaries.", text:
 `### Weather
 
-Home location only. Other locations: "I cannot give forecasts for other locations." Never mention the home city.
+#### Services
+
+Use get_weather_forecast by default.
+
+When you user names a location:
+
+1. Call \`GetDateTime\`
+2. Call \`get_weather_by_location\` with \`IMPERIAL\` units and the date based on the user's request.
+
+#### Response
 
 Precipitation values represent chance, not intensity. Above 34 degrees is rain, at or below is snow. Refer to \`lightning-rainy\` conditions as thunderstorms.
 
 Specific weather questions: answer only what was asked.
 
-General requests, order of information (as a connected natural response):
+General requests: answer in two to three complete sentences covering, in order:
 
 1. Current temperature — today only.
 2. Conditions and precipitation — describe how the day unfolds, including transitions and shifts in likelihood. Default to uncertain phrasing for precipitation. Speak directly only when likelihood is very likely or higher. No temperatures here. Skip if likelihood never exceeds unlikely.
@@ -322,10 +362,16 @@ Opening/closing rules:
 - \`open_now\` is true → respond "[place] is open right now and closes at [next_closes_at time]."
 - \`open_now\` is false → respond "[place] is currently closed and opens at [next opening time]."` },
 
-  { key: "recipes", label: "Food Recipes", desc: "Look up recipes (ingredients, amounts, steps) in Mealie before falling back to web search.", text:
-`### Food Recipes
+  { key: "recipes", label: "Food and Drink Recipes", desc: "Check saved drink recipes in memory and the recipe tools before falling back to web search; answer bar inventory questions from memory.", text:
+`### Food and Drink Recipes
 
-For any question about a food recipe, including its ingredients, amounts, ratios, or steps, call mealie_search_recipe first, even when the user says "my" or "our". Search with only the dish name. If it returns no match, use the search tool.` },
+For any recipe question, including its ingredients, amounts, ratios, or steps, even when the user says "my" or "our":
+
+1. Call memory_read with path \`user/bartender-recipes\`.
+2. Call get_food_recipes with \`search\` set to only the recipe name, then get_food_recipe with the matching slug.
+3. Answer from whichever has the recipe. Neither does: search the web.
+
+For any question about the alcohol on hand, call memory_read with path \`user/bartender-inventory\`.` },
 
   { key: "media", label: "Media Playback", desc: "Music search-and-play through Home Assistant's media tools, plus YouTube/video routing rules.", text:
 `### Media Playback
@@ -341,7 +387,7 @@ If the user describes media instead of naming it, such as "the new album", searc
 
 Video Requests:
 
-Only when the user mentions a TV or a video. All other play requests use the Music Requests path above.
+Only when the user explicitly requests playback on a TV. All other play requests use the Music Requests path above.
 
 1. Retrieve the current area and confirm it has a TV.
 2. Call search_youtube to get the video URL.
@@ -355,20 +401,20 @@ Only when the user mentions a TV or a video. All other play requests use the Mus
  *  STATE + RENDERING
  * ------------------------------------------------------------------ */
 const state = {
-  persona: "concise-robot",
+  model: Object.keys(MODELS)[0],
   enabled: new Set(OPTIONS.map(o => o.key)) // all on by default
 };
 
 const $ = sel => document.querySelector(sel);
 
 function buildPrompt() {
-  const parts = [];
-  parts.push(PERSONAS[state.persona].identity);
+  const model = MODELS[state.model];
+  const textOf = block => model.overrides[block.key] ?? block.text;
   const on = OPTIONS.filter(o => state.enabled.has(o.key));
   // Options can redirect part of the base search rule to their own tool (e.g. sports -> sports_search).
   const redirects = on.filter(o => o.searchRedirect).map(o => "; " + o.searchRedirect).join("");
-  for (const s of ALWAYS) parts.push(s.text.replace("%%SEARCH_REDIRECTS%%", redirects));
-  for (const o of on) parts.push(o.text);
+  const parts = ALWAYS.map(s => textOf(s).replace("%%SEARCH_REDIRECTS%%", redirects));
+  for (const o of on) parts.push(textOf(o));
   return parts.join("\n\n") + "\n";
 }
 
@@ -383,19 +429,20 @@ function render() {
     el.classList.toggle("checked", state.enabled.has(k));
     el.querySelector("input").checked = state.enabled.has(k);
   });
-  $("#personaDesc").textContent = PERSONAS[state.persona].desc;
+  $("#modelDesc").textContent = MODELS[state.model].desc;
+  $("#modelFile").textContent = "prompts/" + MODELS[state.model].file;
 }
 
 function init() {
-  // personas
-  const sel = $("#persona");
-  for (const [key, p] of Object.entries(PERSONAS)) {
+  // models
+  const sel = $("#model");
+  for (const [key, m] of Object.entries(MODELS)) {
     const opt = document.createElement("option");
-    opt.value = key; opt.textContent = p.label;
+    opt.value = key; opt.textContent = m.label;
     sel.appendChild(opt);
   }
-  sel.value = state.persona;
-  sel.addEventListener("change", () => { state.persona = sel.value; render(); });
+  sel.value = state.model;
+  sel.addEventListener("change", () => { state.model = sel.value; render(); });
 
   // options
   const optWrap = $("#options");
@@ -414,7 +461,6 @@ function init() {
 
   // always chips
   const always = $("#always");
-  always.appendChild(chip("Identity"));
   for (const s of ALWAYS) always.appendChild(chip(s.label));
 
   // toggle all
@@ -444,7 +490,7 @@ function init() {
     const blob = new Blob([buildPrompt()], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${state.persona}-system-prompt.md`;
+    a.href = url; a.download = `${state.model}-system-prompt.md`;
     a.click(); URL.revokeObjectURL(url);
   });
 

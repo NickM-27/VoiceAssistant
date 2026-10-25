@@ -43,7 +43,7 @@ Each stage is swappable. The LLM is the only piece that is meaningfully sensitiv
 
 ### Agent Model
 
-- Gemma4 26B-A4B, chat and tool calling, running in llama.cpp — see [configs/config.ini](configs/config.ini)
+- Nemotron 3.5 Bolt E4B, chat and tool calling, running in llama.cpp — see [configs/config.ini](configs/config.ini)
 
 ### TTS
 

@@ -1,15 +1,15 @@
 # prompts
 
 > **🤖 [Open the interactive Prompt Builder →](https://nickm-27.github.io/VoiceAssistant/)**
-> Pick a personality (Concise Robot, Star Wars Droid) and toggle the capability blocks you use (Memory, Sports, Weather, Places, Food Recipes, Media Playback) to generate a ready-to-paste system prompt. Source: [docs/index.html](../docs/index.html).
+> Pick your model and toggle the capability blocks you use (Memory, Sports, Weather, Places, Food and Drink Recipes, Media Playback) to generate a ready-to-paste system prompt. Source: [docs/index.html](../docs/index.html).
 
-The prompts that shape voice-assistant behavior. Three files, each feeding a different stage of the pipeline.
+The prompts that shape voice-assistant behavior. Each one feeds a different stage of the pipeline.
 
 | File | Stage | Consumer |
 | --- | --- | --- |
 | [stt-prompt.md](stt-prompt.md) | Speech-to-text | Initial/bias prompt handed to the STT model |
 | [llm-context-prompt.jinja](llm-context-prompt.jinja) | LLM context assembly | Home Assistant's conversation agent (rendered per request) |
-| [primary-prompt.md](primary-prompt.md) | LLM system prompt | The chat model's `system` role |
+| [primary-prompt/](primary-prompt/) | LLM system prompt | The chat model's `system` role, one file per model |
 
 The LLM receives the primary prompt as its system message, and the rendered context prompt as part of the user-visible context Home Assistant injects. STT operates independently.
 
@@ -43,9 +43,18 @@ Edit this when:
 
 Tool exposure (which built-in intents the model sees) is configured separately in LLM Intents, not in this template.
 
-## primary-prompt.md
+## primary-prompt/
 
-The system prompt. This is the file that most shapes perceived quality, and the one most worth iterating on. Read it directly for the specifics — it's short and already grouped by topic.
+The system prompt. This is what most shapes perceived quality, and the one most worth iterating on. Read it directly for the specifics — it's short and already grouped by topic.
+
+There is one file per model, named after the model:
+
+| File | Model |
+| --- | --- |
+| [nemotron-3.5-bolt-e4b.md](primary-prompt/nemotron-3.5-bolt-e4b.md) | Nemotron 3.5 Bolt E4B (default) |
+| [gemma4-26b-a4b.md](primary-prompt/gemma4-26b-a4b.md) | Gemma4 26B-A4B |
+
+Every file follows the same rules and section layout. What differs is the wording: models read the same instruction differently, so each file is tuned against the model it's named for. Use the file that matches the model you run, and if you're adding a model, start from the closest existing file and adjust.
 
 ### Why the prompt is this prescriptive
 
@@ -55,7 +64,7 @@ Out of the box a general-purpose chat model doesn't know what "good" looks like 
 - **Response shape.** Separate from length, this is *how* an answer is structured. Without guidance, the model will narrate a device action before performing it ("Okay, turning the kitchen light on now…") or answer "is the pharmacy open?" by reading off hours and letting the user do the math. The prompt pins down the shapes that matter: execute device commands first and report the resulting state in five words or fewer without reusing the user's verb (so "turn on the kitchen light" is answered with "kitchen light is on", not "turning on the kitchen light"), sequence weather as current temperature → conditions and precipitation arc → highs and lows, answer open/closed questions with the explicit "open right now and closes at …" / "currently closed and opens at …" templates. Consistent shape is what makes the assistant feel like a product instead of a chatbot.
 - **Tool-calling effectiveness.** Models over- and under-call tools in equally annoying ways. They answer home-specific questions from guesses instead of querying memory, pass extra arguments (`domain`, `device_class`) that misroute Home Assistant service calls, or stop after one tool call when the question needs two. Per-tool rules — when to call, what to pass, how to incorporate the result — are what turn a capable model into a reliable one.
 
-Tune these to your own preferences. Want chattier replies? Loosen brevity. Prefer to hear the action announced before it happens? Change the response-shape rules. The point isn't the specific choices in this prompt, it's that the choices are written down — swap the model and the behavior stays close to what you wanted.
+Tune these to your own preferences. Want chattier replies? Loosen brevity. Prefer to hear the action announced before it happens? Change the response-shape rules. The point isn't the specific choices in this prompt, it's that the choices are written down — swap the model and the behavior stays close to what you wanted, after retuning the wording for the new model.
 
 When editing, preserve the imperative voice and short, rule-shaped lines. Models follow "Do X. Never Y." far better than paragraphs of guidance.
 
@@ -63,6 +72,7 @@ When editing, preserve the imperative voice and short, rule-shaped lines. Models
 
 Before shipping a prompt change:
 
-1. Re-test the five canonical flows: a device command, an ambiguous device command, a weather question, a places query with multiple results, and a general-knowledge question.
+1. Re-test the five canonical flows on the model the file is named for: a device command, an ambiguous device command, a weather question, a places query with multiple results, and a general-knowledge question.
 2. Confirm responses follow their templates: device actions report the final state in five words or fewer, without narrating the request first or echoing the user's verb; weather sequences correctly; and open/closed answers use the exact "open right now" / "currently closed" phrasing.
 3. If you added a new tool section, give it the same shape as the existing ones (when to call, what args to pass, how to format the response).
+4. Mirror the change in the Prompt Builder ([docs/index.html](../docs/index.html)). The shared blocks hold the default model's wording; another model whose wording differs for a block carries its own copy in `overrides`. With every capability toggled on, the builder's output for a model should match its file exactly.
